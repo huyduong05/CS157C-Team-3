@@ -13,7 +13,9 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
-    host: true,
+    host: '0.0.0.0',
+    watch: { usePolling: true },
+    hmr: { host: 'localhost', protocol: 'ws', port: 5173 },
     origin: "http://0.0.0.0:5173",
     historyApiFallback: true,
   },
