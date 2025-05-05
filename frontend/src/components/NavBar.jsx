@@ -8,12 +8,12 @@ function Navbar() {
 
       <div className="flex-1 flex justify-center">
         <div className="relative w-[60%]">
+          <FaSearch className="absolute left-4 top-2.5 text-gray-500 text-xl" />
           <input
             type="text"
             placeholder="Search..."
-            className="w-full px-4 py-2 rounded-full border border-gray-400 focus:outline-none"
+            className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-500 focus:outline-none focus:border-black"
           />
-          <FaSearch className="absolute right-4 top-2.5 text-gray-500" />
         </div>
       </div>
 
