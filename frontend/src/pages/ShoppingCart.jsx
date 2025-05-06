@@ -32,6 +32,22 @@ function ShoppingCart() {
     );
   };
 
+  const handleMoveToWishlist = async (item) => {
+    // Send POST to wishlist
+    await fetch("http://localhost:5001/wishlist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: item.name,
+        price: item.price,
+        site: item.site,
+      }),
+    });
+  
+    // Then remove from cart
+    await handleDelete(item._id);
+  };
+
   return (
     <div className="min-h-screen bg-[#f6eae2] px-8 py-12">
       <div className="flex justify-between mb-6">
@@ -58,7 +74,12 @@ function ShoppingCart() {
                 <p className="text-gray-800">Site: {item.site}</p>
                 <div className="flex space-x-3 mt-2 text-sm text-gray-700">
                   <button className="hover:underline">Edit</button>
-                  <button className="hover:underline">Move to Wishlist</button>
+                  <button
+                    onClick={() => handleMoveToWishlist(item)}
+                    className="hover:underline"
+                  >
+                    Move to Wishlist
+                  </button>
                   <button
                     onClick={() => handleDelete(item._id)}
                     className="hover:underline"
