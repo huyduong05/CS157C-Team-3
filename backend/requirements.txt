@@ -1,3 +1,9 @@
 flask
 flask-pymongo
 flask-cors
+
+# for oxylabs scripts
+requests
+pandas
+python-dotenv
+
