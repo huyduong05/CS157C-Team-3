@@ -6,4 +6,6 @@ flask-cors
 requests
 pandas
 python-dotenv
+beautifulsoup4
+lxml
 

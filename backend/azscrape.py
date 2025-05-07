@@ -31,7 +31,6 @@ def extract_product_fields(product, search_term):
         'shipping_information': product.get('shipping_information'),
     }
 
-# Option A: combine all results into one DataFrame
 combined_data = []
 
 for term in SEARCH_TERMS:
@@ -41,26 +40,30 @@ for term in SEARCH_TERMS:
         "query": term,
         "domain": "com",
         "geo_location": GEO_LOCATION,
-        "parse": True
+        "parse": True,
+         "start_page": 1,
+        "pages": 4,    # Get first 3 pages
+        #"limit": 20    # Aim for ~20 per page
     }
 
     response = requests.post(BASE_URL, auth=HTTPBasicAuth(USERNAME, PASSWORD), json=payload)
     print(f"{term} → Status {response.status_code}")
-    
+
     if response.status_code != 200:
         print(response.text)
         continue
 
     data = response.json()
-    results_obj = data.get('results', [])[0].get('content', {}).get('results', {})
-    organic_products = results_obj.get('organic', [])[:60]
 
-    if not organic_products:
-        print(f"No organic results for {term}")
-        continue
+    for result in data.get('results', []):
+        content = result.get('content', {}).get('results', {})
+        organic_products = content.get('organic', [])
 
-    # Option A: Append to master list
-    combined_data.extend([extract_product_fields(p, term) for p in organic_products])
+        if not organic_products:
+            print(f"No organic results on one of the pages for {term}")
+            continue
+
+        combined_data.extend([extract_product_fields(p, term) for p in organic_products])
 
     '''
     # Option B: Save a CSV for this search term
@@ -68,7 +71,6 @@ for term in SEARCH_TERMS:
     df.to_csv(f"{term}_products.csv", index=False)
     print(f"Saved {len(df)} products to {term}_products.csv")
     '''
-# Option A: Save one CSV with all results
 if combined_data:
-    pd.DataFrame(combined_data).to_csv("azproducts.csv", index=False)
-    print(f"Saved total of {len(combined_data)} products to azproducts.csv")
+    pd.DataFrame(combined_data).to_csv("azproducts3.csv", index=False)
+    print(f"Saved total of {len(combined_data)} products to azproducts3.csv")
