@@ -1,13 +1,10 @@
 function Home() {
-    return (
-      <div className="min-h-screen ">
-        <main className="flex flex-col space-y-6 items-center pt-44 pb-10">
-          <h1 className="text-6xl text-red">
-            Home
-          </h1>
-        </main>
-      </div>
-    );
-  }
+  return (
+    <div className="text-center py-24">
+      <h1 className="text-4xl font-bold mb-2">Finding Best Products Now</h1>
+      <p className="text-xl text-gray-700">Start shopping...</p>
+    </div>
+  );
+}
 
-  export default Home;
+export default Home;
