@@ -103,7 +103,7 @@ const ProductCard = ({ product, actions = {}, onDelete }) => {
       >
         View Product
       </a>
-      {actions.addToCart && (
+      {actions.addToWishlist && (
       <button
         onClick={addToWishlist}
         className='mt-2 px-4 py-2 bg-green-700 text-white rounded'>
