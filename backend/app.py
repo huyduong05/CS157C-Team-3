@@ -7,6 +7,11 @@ import re
 import bcrypt
 from datetime import datetime
 
+import jwt
+from datetime import datetime, timedelta
+
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
+
 app = Flask(__name__)
 CORS(app)  # allow cross‑origin requests
 
@@ -60,13 +65,21 @@ def login():
         return jsonify({"error": "Missing credentials"}), 400
 
     user = users.find_one({"username": username})
-    if not user:
-        return jsonify({"error": "User not found"}), 404
+    if not user or not bcrypt.checkpw(password.encode('utf-8'), user["password"]):
+        return jsonify({"error": "Invalid credentials"}), 401
 
-    if not bcrypt.checkpw(password.encode('utf-8'), user["password"]):
-        return jsonify({"error": "Incorrect password"}), 401
+    payload = {
+        "username": username,
+        "exp": datetime.utcnow() + timedelta(hours=1)
+    }
+    token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
-    return jsonify({"message": "Login successful", "username": username}), 200
+    return jsonify({
+    "message": "Login successful",
+    "token": token,
+    "username": username 
+    }), 200
+
 
 @app.route("/user/<string:username>", methods=["GET"])
 def get_user(username):
