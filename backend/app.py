@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request
 from flask_pymongo import PyMongo
 from flask_cors import CORS
 from bson import ObjectId
+import re
 
 app = Flask(__name__)
 CORS(app)  # allow cross‑origin requests
@@ -144,7 +145,7 @@ def safe_number(value):
 def get_random_products():
     products_collection = mongo.db.products
 
-    pipeline = [{"$sample": {"size": 10}}]
+    pipeline = [{"$sample": {"size": 12}}]
     random_products = list(products_collection.aggregate(pipeline))
 
     response = []
@@ -161,6 +162,40 @@ def get_random_products():
         })
 
     return jsonify(response)
+
+# GET products based on search parameters
+@app.route("/search", methods=["GET"])
+def search_products():
+    raw_query = request.args.get("query", "").strip()
+    if not raw_query:
+        return jsonify({"products": []}), 200
+
+    # Escape special regex characters to prevent malformed queries
+    query = re.escape(raw_query)
+
+    # Querying MongoDB Products Collection
+    matching_products = products.find({
+        "$or": [
+            {"title": {"$regex": query, "$options": "i"}},
+            {"search_term": {"$regex": query, "$options": "i"}}
+        ]
+    })
+
+    response = []
+    for product in matching_products:
+        response.append({
+            "_id": str(product.get("_id")),
+            "category": product.get("search_term"),
+            "title": product.get("title"),
+            "url": product.get("url"),
+            "price": safe_number(product.get("price")),
+            "rating": safe_number(product.get("rating")),
+            "image_url": product.get("image_url"),
+            "from": product.get("from")
+        })
+
+    return jsonify({"products": response}), 200
+
 
 
 if __name__ == "__main__":

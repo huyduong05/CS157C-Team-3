@@ -7,14 +7,14 @@ function ShoppingCart() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:5000/cart") //changed to localhost 5000
+    fetch("http://localhost:5001/cart") //changed to localhost 5000
       .then((res) => res.json())
       .then(setCartItems)
       .catch((err) => console.error("Failed to fetch cart items:", err));
   }, []);
 
   const handleDelete = async (id) => {
-    const res = await fetch(`http://localhost:5000/cart/${id}`, { 
+    const res = await fetch(`http://localhost:5001/cart/${id}`, { 
       method: "DELETE",
     });
   
