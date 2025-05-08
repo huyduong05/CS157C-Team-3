@@ -7,6 +7,11 @@ import re
 import bcrypt
 from datetime import datetime
 
+import jwt
+from datetime import datetime, timedelta
+
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
+
 app = Flask(__name__)
 CORS(app)  # allow cross‑origin requests
 
@@ -21,6 +26,7 @@ products = mongo.db.products  # product listings
 shoppingCart = mongo.db.shoppingCart  # shopping cart items
 wishlist = mongo.db.wishlist  # wishlist items
 users = mongo.db.users  # user accounts
+orderHistory = mongo.db.orderHistory # order history
 
 # --- Users CRUD operations ---
 
@@ -60,13 +66,21 @@ def login():
         return jsonify({"error": "Missing credentials"}), 400
 
     user = users.find_one({"username": username})
-    if not user:
-        return jsonify({"error": "User not found"}), 404
+    if not user or not bcrypt.checkpw(password.encode('utf-8'), user["password"]):
+        return jsonify({"error": "Invalid credentials"}), 401
 
-    if not bcrypt.checkpw(password.encode('utf-8'), user["password"]):
-        return jsonify({"error": "Incorrect password"}), 401
+    payload = {
+        "username": username,
+        "exp": datetime.utcnow() + timedelta(hours=1)
+    }
+    token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
-    return jsonify({"message": "Login successful", "username": username}), 200
+    return jsonify({
+    "message": "Login successful",
+    "token": token,
+    "username": username 
+    }), 200
+
 
 @app.route("/user/<string:username>", methods=["GET"])
 def get_user(username):
@@ -290,7 +304,53 @@ def search_products():
 
     return jsonify({"products": response}), 200
 
+#POST request to move all items in shopping cart to orderhistory
+@app.route("/checkout", methods=["POST"])
+def checkout():
+    """
+    1.  Read every document in shoppingCart
+    2.  Insert them into orderHistory with a shared order_id + timestamp
+    3.  Clear shoppingCart
+    4.  Return basic confirmation JSON
+    """
 
+    # 1) grab everything in the shopping cat
+    cart_items = list(shoppingCart.find())
+
+    if not cart_items:
+        return jsonify({"msg": "Cart is empty"}), 400
+
+    # 2) build orderHistory docs
+    order_id = ObjectId()           # one id groups this order
+    now = datetime.utcnow()
+
+    history_docs = []
+    for item in cart_items:
+        item.pop("_id", None)       # drop old _id so Mongo creates new ones
+        history_docs.append({
+            **item,
+            "order_id": order_id,
+            "ordered_at": now
+        })
+
+    # 3) bulk insert into OH and cart-clear
+    mongo.db.orderHistory.insert_many(history_docs)
+    shoppingCart.delete_many({})    # remove everything from cart
+
+    # 4) response messages to client
+    return jsonify({
+        "order_id": str(order_id),
+        "items_moved": len(history_docs)
+    }), 201
+
+# GET all items in orderhistory
+@app.route("/orders", methods=["GET"])
+def get_prderHistory():
+    items = []
+    for doc in orderHistory.find():
+        doc["_id"] = str(doc["_id"])
+        items.append(doc)
+    return jsonify(items), 200
 
 if __name__ == "__main__":
     # Running this way only applies if you do: python app.py

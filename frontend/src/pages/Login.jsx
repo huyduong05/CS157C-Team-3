@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode'; 
 
 const Login = () => {
   const navigate = useNavigate();
@@ -25,12 +26,22 @@ const Login = () => {
       });
 
       const data = await res.json();
+      console.log("Login response:", data); 
 
-      if (res.ok) {
-        localStorage.setItem('username', formData.username);
+      if (res.ok && data.token && data.username) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('username', data.username);
+
+        try { // decoded token
+          const decoded = jwtDecode(data.token);
+          console.log("Decoded token:", decoded);
+        } catch (decodeErr) {
+          console.warn("Token decode failed:", decodeErr);
+        }
+
         navigate('/home');
       } else {
-        setError(data.error || 'Login failed');
+        setError(data.error || 'Login failed. Missing token or username.');
       }
     } catch (err) {
       setError('Server error. Please try again.');
