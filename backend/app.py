@@ -4,6 +4,8 @@ from flask_pymongo import PyMongo
 from flask_cors import CORS
 from bson import ObjectId
 import re
+import bcrypt
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)  # allow cross‑origin requests
@@ -18,7 +20,99 @@ mongo = PyMongo(app)
 products = mongo.db.products  # product listings
 shoppingCart = mongo.db.shoppingCart  # shopping cart items
 wishlist = mongo.db.wishlist  # wishlist items
+users = mongo.db.users  # user accounts
 
+# --- Users CRUD operations ---
+
+@app.route("/signup", methods=["POST"])
+def signup():
+    data = request.get_json() or {}
+    username = data.get("username")
+    email = data.get("email")
+    password = data.get("password")
+
+    if not all([username, email, password]):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    if users.find_one({"username": username}):
+        return jsonify({"error": "Username already exists"}), 409
+
+    hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+    user = {
+        "username": username,
+        "email": email,
+        "password": hashed_pw,
+        "created_at": datetime.utcnow()
+    }
+
+    result = users.insert_one(user)
+    return jsonify({"message": "User created", "user_id": str(result.inserted_id)}), 201
+
+
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json() or {}
+    username = data.get("username")
+    password = data.get("password")
+
+    if not all([username, password]):
+        return jsonify({"error": "Missing credentials"}), 400
+
+    user = users.find_one({"username": username})
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if not bcrypt.checkpw(password.encode('utf-8'), user["password"]):
+        return jsonify({"error": "Incorrect password"}), 401
+
+    return jsonify({"message": "Login successful", "username": username}), 200
+
+@app.route("/user/<string:username>", methods=["GET"])
+def get_user(username):
+    user = users.find_one({"username": username})
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    created_raw = user.get("created_at")
+    created_at = created_raw.strftime("%b %d, %Y") if created_raw else "Unknown"
+
+    return jsonify({
+        "username": user["username"],
+        "email": user["email"],
+        "created_at": created_at
+    }), 200
+
+@app.route("/user/<string:username>", methods=["PUT"])
+def update_user(username):
+    data = request.get_json() or {}
+    new_username = data.get("username")
+    new_email = data.get("email")
+
+    if not new_username or not new_email:
+        return jsonify({"error": "Missing username or email"}), 400
+
+    if new_username != username and users.find_one({"username": new_username}):
+        return jsonify({"error": "Username already exists"}), 409
+
+    result = users.update_one(
+        {"username": username},
+        {"$set": {"username": new_username, "email": new_email}}
+    )
+
+    if result.matched_count == 0:
+        return jsonify({"error": "User not found"}), 404
+
+    updated_user = users.find_one({"username": new_username})
+    created_raw = updated_user.get("created_at")
+    created_at = created_raw.strftime("%b %d, %Y") if created_raw else "Unknown"
+
+    return jsonify({
+        "message": "User updated",
+        "username": updated_user["username"],
+        "email": updated_user["email"],
+        "created_at": created_at
+    }), 200
 
 # --- Product Listing CRUD operations ---
 @app.route("/products", methods=["GET"])
