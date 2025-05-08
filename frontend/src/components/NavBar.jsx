@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
-import { FaSearch, FaUserCircle, FaHeart, FaShoppingCart, FaHome } from "react-icons/fa";
+import { FaSearch, FaUserCircle, FaHeart, FaShoppingCart, FaHome, FaClock } from "react-icons/fa";
+
+
 
 
 
@@ -72,12 +74,15 @@ function Navbar() {
           <span>Cart</span>
         </NavLink>
         
-        `<NavLink className={({ isActive }) =>
-            isActive
-              ? "flex items-center space-x-1 font-bold underline"
-              : "flex items-center space-x-1"
-          } to="/orderhistory">
-        <span>Order History</span>
+        <NavLink 
+          to="/checkout"
+          className={({ isActive }) =>
+          isActive
+            ? "flex items-center space-x-1 font-bold underline"
+            : "flex items-center space-x-1"
+          }>
+          <FaClock />
+          <span>Order History</span>
         </NavLink>
 
         <Link to="/profile">
