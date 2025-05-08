@@ -41,6 +41,30 @@ const ProductCard = ({ product, actions = {}, onDelete }) => {
         });
   }
 
+  const addToWishlist = () => {
+    fetch('http://localhost:5001/wishlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json'},
+      body: JSON.stringify({
+          title: product.title,
+          price: `${parseFloat(product.price?.toString().replace(/[^0-9.]/g, ''))}`,
+          quantity: 1, // for now just add 1 at a time
+          from: product.from,
+          category: product.category,
+          image_url: product.image_url
+
+      })
+  })
+      .then(res => res.json())
+      .then(data => {
+          alert('Item wishlisted!');
+      })
+      .catch(err => {
+          console.error('Error adding to wishlist:', err);
+          alert('Failed to wishlist item');
+      });
+  }
+
   return (
     <div
       key={product._id}
@@ -79,6 +103,13 @@ const ProductCard = ({ product, actions = {}, onDelete }) => {
       >
         View Product
       </a>
+      {actions.addToWishlist && (
+      <button
+        onClick={addToWishlist}
+        className='mt-2 px-4 py-2 bg-green-700 text-white rounded'>
+        Wishlist
+      </button>
+      )}
       {actions.addToCart && (
       <button
         onClick={addToCart}
