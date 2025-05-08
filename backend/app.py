@@ -56,7 +56,7 @@ def get_cart_items():
 def add_item_to_cart():
     data = request.get_json() or {}
 
-    required_fields = ["name", "price", "quantity", "site"]
+    required_fields = ["title", "price", "quantity", "from"]
     for field in required_fields:
         if field not in data:
             return jsonify({"error": f"Missing field: {field}"}), 400
@@ -151,6 +151,7 @@ def get_random_products():
     for product in random_products:
         response.append({
             "_id": str(product.get("_id")),
+            "category": product.get("search_term"),
             "title": product.get("title"),
             "url": product.get("url"),
             "price": safe_number(product.get("price")),
