@@ -8,6 +8,7 @@ import ProductListing from "./pages/ProductListing";
 import ShoppingCart from "./pages/ShoppingCart";
 import CheckoutSummary from "./pages/CheckoutSummary";
 import Profile from "./pages/Profile";
+import SearchResults from "./pages/SearchResults";
 
 function App() {
   return (
@@ -22,7 +23,8 @@ function App() {
             <Route path="/cart" element={<ShoppingCart />} />
             <Route path="/checkout" element={<CheckoutSummary />} />
             <Route path="/profile" element={<Profile />} />
-          </Routes>
+            <Route path="/search" element={<SearchResults />} />
+          </Routes> 
         </main>
         <Footer />
       </div>

@@ -8,6 +8,6 @@ COPY . .
 
 RUN chmod +x start.sh
 
-EXPOSE 5001
+EXPOSE 5000
 
-CMD ["./start.sh"]
+CMD ["bash", "-c", "python dbinit.py && flask run --host=0.0.0.0 --port=5000"]

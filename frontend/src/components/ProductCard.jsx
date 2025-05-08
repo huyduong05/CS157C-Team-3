@@ -18,7 +18,7 @@ const ProductCard = ({ product, actions = {}, onDelete }) => {
   const fallbackIcon = categoryIcons[product.category] || LaptopIcon; // to handle listings without an image
   
   const addToCart = () => {
-    fetch('http://localhost:5000/cart', {
+    fetch('http://localhost:5001/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify({
