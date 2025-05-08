@@ -68,7 +68,7 @@ const ProductCard = ({ product, actions = {}, onDelete }) => {
   return (
     <div
       key={product._id}
-      className="border rounded-lg shadow-md p-4 flex flex-col items-center"
+      className=" bg-white rounded-md shadow-lg border border-gray-200 p-4 flex flex-col items-center transition-transform duration-200 transform hover:scale-105"
     >
       {product.from === 'amazon' && product.image_url ? (
         <img
@@ -106,21 +106,21 @@ const ProductCard = ({ product, actions = {}, onDelete }) => {
       {actions.addToWishlist && (
       <button
         onClick={addToWishlist}
-        className='mt-2 px-4 py-2 bg-green-700 text-white rounded'>
+        className='mt-2 px-4 py-2 bg-green-700 hover:bg-green-600 text-white rounded-3xl'>
         Wishlist
       </button>
       )}
       {actions.addToCart && (
       <button
         onClick={addToCart}
-        className='mt-2 px-4 py-2 bg-cyan-700 text-white rounded'>
+        className='mt-2 px-4 py-2 bg-cyan-700 hover:bg-cyan-600 text-white rounded-3xl'>
         Add To Cart
       </button>
       )}
       {actions.delete && (
           <button
             onClick={() => onDelete(product._id) }
-            className="px-4 py-2 my-2 bg-red-600 text-white rounded"
+            className="px-4 py-2 my-2 bg-red-600 text-white rounded-3xl"
           >
             Delete
           </button>
