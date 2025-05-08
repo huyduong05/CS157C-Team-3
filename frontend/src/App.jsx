@@ -19,7 +19,7 @@ function AppRoutes() {
   const hideNavbar = hideNavbarRoutes.includes(location.pathname);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f6eae2]">
+    <div className="flex flex-col min-h-screen bg-white">
       {!hideNavbar && <Navbar />}
       <main className="flex-1">
         <Routes>

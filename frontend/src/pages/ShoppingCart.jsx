@@ -57,7 +57,7 @@ function ShoppingCart() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6eae2] px-8 py-12">
+    <div className="min-h-screen px-8 py-12">
       <div className="flex justify-between mb-6">
         <button
           onClick={() => navigate("/")} //switched to navigate back to home

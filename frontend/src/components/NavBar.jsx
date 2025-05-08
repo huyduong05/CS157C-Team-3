@@ -17,8 +17,8 @@ function Navbar() {
   };
 
   return (
-    <nav className="bg-gradient-to-b from-[#c4a79a] to-[#f6eae2] py-4 px-6 flex justify-between items-center">
-      <Link to="/" className="text-2xl font-bold text-red-600">Shopkeeper</Link>
+    <nav className="bg-white py-4 px-6 flex justify-between items-center">
+      <Link to="/home" className="text-2xl font-bold text-red-600">Shopkeeper</Link>
 
       <div className="flex-1 flex justify-center">
 
@@ -37,7 +37,7 @@ function Navbar() {
 
       <div className="flex items-center space-x-4 text-black text-lg">
         <NavLink
-          to="/"
+          to="/home"
           className={({ isActive }) =>
             isActive
               ? "flex items-center space-x-1 font-bold underline"
@@ -71,10 +71,19 @@ function Navbar() {
           <FaShoppingCart />
           <span>Cart</span>
         </NavLink>
+        
+        `<NavLink className={({ isActive }) =>
+            isActive
+              ? "flex items-center space-x-1 font-bold underline"
+              : "flex items-center space-x-1"
+          } to="/orderhistory">
+        <span>Order History</span>
+        </NavLink>
 
         <Link to="/profile">
           <FaUserCircle className="text-4xl text-gray-700 cursor-pointer" />
         </Link>
+
       </div>
     </nav>
   );

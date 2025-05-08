@@ -68,7 +68,7 @@ const ProductCard = ({ product, actions = {}, onDelete }) => {
   return (
     <div
       key={product._id}
-      className=" bg-white border-gray-200 rounded-sm shadow-md p-4 flex flex-col items-center"
+      className=" bg-white rounded-md shadow-lg border border-gray-200 p-4 flex flex-col items-center transition-transform duration-200 transform hover:scale-105"
     >
       {product.from === 'amazon' && product.image_url ? (
         <img

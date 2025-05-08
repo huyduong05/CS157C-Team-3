@@ -60,7 +60,7 @@ function Wishlist() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#f6eae2] py-16 px-6">
+    <div className="min-h-screen py-16 px-6">
       <h1 className="text-4xl font-bold mb-8 text-center text-red-700">
         Your Wishlist
       </h1>
