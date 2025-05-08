@@ -10,4 +10,6 @@ RUN chmod +x start.sh
 
 EXPOSE 5000
 
-CMD ["bash", "-c", "python dbinit.py && flask run --host=0.0.0.0 --port=5000"]
+#hopefully fixes line encoding issues with sh
+CMD ["bash", "-c", "python dbinit.py && flask run --host=0.0.0.0 --port=5000"] 
+
