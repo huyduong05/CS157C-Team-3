@@ -2,6 +2,7 @@ flask
 flask-pymongo
 flask-cors
 bcrypt
+PyJWT==2.8.0   
 
 # for oxylabs scripts
 requests
