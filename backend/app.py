@@ -114,7 +114,7 @@ def get_wishlist_items():
 @app.route("/wishlist", methods=["POST"])
 def add_item_to_wishlist():
     data = request.get_json() or {}
-    required_fields = ["name", "price", "site"]
+    required_fields = ["title", "price", "quantity", "from"]
     for field in required_fields:
         if field not in data:
             return jsonify({"error": f"Missing field: {field}"}), 400
