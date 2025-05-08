@@ -37,7 +37,7 @@ function Home() {
             <h2 className="text-lg font-semibold mb-1">{product.title}</h2>
             <p className="text-sm text-gray-500 mb-1">{product.from}</p>
             <p className="text-green-600 font-bold mb-1">
-            {product.price ? `$${parseFloat(product.price)}` : "Price unavailable"}
+            {product.price ? `$${parseFloat(product.price?.toString().replace(/[^0-9.]/g, ''))}` : "Price unavailable"}
             </p>
             {/*product.rating && (
               <p className="text-yellow-500">⭐ {product.rating}</p>
