@@ -8,7 +8,7 @@ load_dotenv()
 
 # Configure mongo on docker
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongo:27017/")
-DB_NAME = "productDB"
+DB_NAME = "mydb"
 COLLECTION_NAME = "products"
 
 # === Connect to MongoDB ===
@@ -22,16 +22,16 @@ print("Cleared existing data in the collection.")
 
 # Create Amz DF
 amazon_df = pd.read_csv("azproducts3.csv")
-amazon_df["From"] = "amazon"
+amazon_df["from"] = "amazon"
 
 # Create EB DF
 ebay_df = pd.read_csv("eb_merged.csv")
-ebay_df["From"] = "ebay"
+ebay_df["from"] = "ebay"
 
-# === Combine both ===
+# Combine Dataframes for one shot insertion
 combined_df = pd.concat([amazon_df, ebay_df], ignore_index=True)
 
-# === Insert into MongoDB ===
+# Insertion!
 records = combined_df.to_dict(orient="records")
 if records:
     collection.insert_many(records)
