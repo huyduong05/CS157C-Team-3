@@ -4,7 +4,7 @@ import { FaSearch, FaUserCircle, FaHeart, FaShoppingCart, FaHome } from "react-i
 function Navbar() {
   return (
     <nav className="bg-gradient-to-b from-[#c4a79a] to-[#f6eae2] py-4 px-6 flex justify-between items-center">
-      <Link to="/" className="text-2xl font-bold text-red-600">MyShop</Link>
+      <Link to="/" className="text-2xl font-bold text-red-600">Shopkeeper</Link>
 
       <div className="flex-1 flex justify-center">
         <div className="relative w-[60%]">

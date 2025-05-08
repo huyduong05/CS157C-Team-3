@@ -8,6 +8,6 @@ COPY . .
 
 RUN chmod +x start.sh
 
-EXPOSE 5000
+EXPOSE 5001
 
 CMD ["./start.sh"]
