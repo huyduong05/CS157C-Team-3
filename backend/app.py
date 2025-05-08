@@ -132,6 +132,35 @@ def delete_wishlist_item(item_id):
         return jsonify({"message": "Item deleted"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+    
+#he;per method to convert data for React
+def safe_number(value):
+    if isinstance(value, dict) and "$numberDouble" in value:
+        return float(value["$numberDouble"])
+    return value
+
+#GET a number of random products
+@app.route("/random", methods=["GET"])
+def get_random_products():
+    products_collection = mongo.db.products
+
+    pipeline = [{"$sample": {"size": 10}}]
+    random_products = list(products_collection.aggregate(pipeline))
+
+    response = []
+    for product in random_products:
+        response.append({
+            "_id": str(product.get("_id")),
+            "title": product.get("title"),
+            "url": product.get("url"),
+            "price": safe_number(product.get("price")),
+            "rating": safe_number(product.get("rating")),
+            "image_url": product.get("image_url"),
+            "from": product.get("from")
+        })
+
+    return jsonify(response)
+
 
 if __name__ == "__main__":
     # Running this way only applies if you do: python app.py
