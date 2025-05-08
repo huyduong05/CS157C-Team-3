@@ -20,7 +20,7 @@ function Home() {
       <p className="text-xl text-gray-700">Start shopping...</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4">
         {products.map((product) => (
-          <ProductCard product = {product}/>
+          <ProductCard product = {product} actions = {{addToCart: true}}/>
         ))}
       </div>
     </div>
