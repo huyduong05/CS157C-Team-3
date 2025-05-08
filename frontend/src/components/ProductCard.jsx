@@ -14,7 +14,7 @@ const categoryIcons = {
     headphones: HeadphonesIcon,
   };
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, actions = {}, onDelete }) => {
   const fallbackIcon = categoryIcons[product.category] || LaptopIcon; // to handle listings without an image
   
   const addToCart = () => {
@@ -25,7 +25,10 @@ const ProductCard = ({ product }) => {
             title: product.title,
             price: `${parseFloat(product.price?.toString().replace(/[^0-9.]/g, ''))}`,
             quantity: 1, // for now just add 1 at a time
-            from: product.from
+            from: product.from,
+            category: product.category,
+            image_url: product.image_url
+
         })
     })
         .then(res => res.json())
@@ -76,11 +79,21 @@ const ProductCard = ({ product }) => {
       >
         View Product
       </a>
+      {actions.addToCart && (
       <button
         onClick={addToCart}
         className='mt-2 px-4 py-2 bg-cyan-700 text-white rounded'>
         Add To Cart
       </button>
+      )}
+      {actions.delete && (
+          <button
+            onClick={() => onDelete(product._id) }
+            className="px-4 py-2 my-2 bg-red-600 text-white rounded"
+          >
+            Delete
+          </button>
+        )}
     </div>
   );
 };
