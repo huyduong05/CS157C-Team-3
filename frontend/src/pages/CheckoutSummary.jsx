@@ -13,16 +13,16 @@ function CheckoutSummary() {
       .catch((err) => console.error("Failed to authFetch past orders:", err));
   }, []);
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="px-5 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
           {data.map((item) => (
             <ProductCard product = {item}/>
           ))}
         </div>
 
-        <div className="bg-white border border-black p-6 rounded h-fit">
+        <div className="bg-neutral-50 border border-gray-200 shadow-2xl p-6 rounded h-fit w-full">
           <h2 className="text-xl font-semibold mb-4">Summary</h2>
-          <p className="mb-2">
+          <p className="mb-2 font-semibold">
             Total Items: {data.reduce((sum, item) => sum + item.quantity, 0)}
           </p>
           <p className="mb-4">
