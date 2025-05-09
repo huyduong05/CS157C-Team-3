@@ -5,6 +5,7 @@ import LaptopIcon from "../assets/laptop.svg";
 import PhoneIcon from "../assets/phone.svg";
 import MonitorIcon from "../assets/monitor.svg";
 import KeyboardIcon from "../assets/keyboards.svg";
+import authFetch from '../authFetch';
 
 const categoryIcons = {
     laptops: LaptopIcon,
@@ -18,7 +19,7 @@ const ProductCard = ({ product, actions = {}, onDelete }) => {
   const fallbackIcon = categoryIcons[product.category] || LaptopIcon; // to handle listings without an image
   
   const addToCart = () => {
-    fetch('http://localhost:5001/cart', {
+    authFetch('http://localhost:5001/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -42,7 +43,7 @@ const ProductCard = ({ product, actions = {}, onDelete }) => {
   }
 
   const addToWishlist = () => {
-    fetch('http://localhost:5001/wishlist', {
+    authFetch('http://localhost:5001/wishlist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json'},
       body: JSON.stringify({

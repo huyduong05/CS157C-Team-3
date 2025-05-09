@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
+import authFetch from "../authFetch";
 
 function CheckoutSummary() {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5001/orders") //changed to localhost 5000
+    authFetch("http://localhost:5001/orders") //changed to localhost 5000
       .then((res) => res.json())
       .then(setData)
-      .catch((err) => console.error("Failed to fetch past orders:", err));
+      .catch((err) => console.error("Failed to authFetch past orders:", err));
   }, []);
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
