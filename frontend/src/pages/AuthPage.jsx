@@ -31,6 +31,12 @@ const AuthPage = () => {
             >
               Sign Up
             </button>
+            <button
+              onClick={() => navigate('/home')}
+              className="w-60 bg-[#432818] text-white py-3 rounded hover:bg-[#2c1a11] transition"
+            >
+              Sign In As Guest
+            </button>
           </div>
         </div>
       </div>

@@ -31,8 +31,9 @@ function Profile() {
   }, [storedUsername]);
 
   const handleLogout = () => {
-    localStorage.removeItem('username');
-    navigate('/login');
+    localStorage.removeItem('username'); 
+    localStorage.removeItem('token');
+    navigate('/');
   };
 
   const handleChange = (e) => {
