@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
+import authFetch from "../authFetch";
 
 function ShoppingCart() {
   const [cartItems, setCartItems] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:5001/cart") //changed to localhost 5000
+    authFetch("http://localhost:5001/cart") //changed to localhost 5000
       .then((res) => res.json())
       .then(setCartItems)
       .catch((err) => console.error("Failed to fetch cart items:", err));
@@ -15,7 +16,7 @@ function ShoppingCart() {
 
   const handleCheckout = async () => {
     try {
-      const res = await fetch("http://localhost:5001/checkout", {
+      const res = await authFetch("http://localhost:5001/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // credentials: "include",  // for adding auth down the road
@@ -38,7 +39,7 @@ function ShoppingCart() {
   };
 
   const handleDelete = async (id) => {
-    const res = await fetch(`http://localhost:5001/cart/${id}`, { 
+    const res = await authFetch(`http://localhost:5001/cart/${id}`, { 
       method: "DELETE",
     });
   

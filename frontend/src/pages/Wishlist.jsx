@@ -1,22 +1,23 @@
 import { useEffect, useState } from "react";
 import ProductCard from "../components/ProductCard";
+import authFetch from "../authFetch";
 
 function Wishlist() {
   const [wishlist, setWishlist] = useState([]);
 
-  const fetchWishlist = async () => {
+  const authFetchWishlist = async () => {
     try {
-      const res = await fetch("http://localhost:5001/wishlist");
+      const res = await authFetch("http://localhost:5001/wishlist");
       const data = await res.json();
       setWishlist(data);
     } catch (err) {
-      console.error("Failed to fetch wishlist:", err);
+      console.error("Failed to authFetch wishlist:", err);
     }
   };
 
   const removeItem = async (id) => {
     try {
-      const res = await fetch(`http://localhost:5001/wishlist/${id}`, {
+      const res = await authFetch(`http://localhost:5001/wishlist/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -31,7 +32,7 @@ function Wishlist() {
   const moveToCart = async (item) => {
     try {
       // Add to cart
-      await fetch("http://localhost:5001/cart", {
+      await authFetch("http://localhost:5001/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -49,14 +50,14 @@ function Wishlist() {
   };
   /*
   useEffect(() => {
-    fetchWishlist();
+    authFetchWishlist();
   }, []);
   */
   useEffect(() => {
-    fetch("http://localhost:5001/wishlist") //changed to localhost 5000
+    authFetch("http://localhost:5001/wishlist") //changed to localhost 5000
       .then((res) => res.json())
       .then(setWishlist)
-      .catch((err) => console.error("Failed to fetch wishlist items: ", err));
+      .catch((err) => console.error("Failed to authFetch wishlist items: ", err));
   }, []);
 
   return (

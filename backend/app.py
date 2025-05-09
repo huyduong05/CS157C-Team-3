@@ -6,6 +6,8 @@ from bson import ObjectId
 import re
 import bcrypt
 from datetime import datetime
+from functools import wraps
+from flask import g
 
 import jwt
 from datetime import datetime, timedelta
@@ -27,6 +29,27 @@ shoppingCart = mongo.db.shoppingCart  # shopping cart items
 wishlist = mongo.db.wishlist  # wishlist items
 users = mongo.db.users  # user accounts
 orderHistory = mongo.db.orderHistory # order history
+
+#wrapper for auth
+def auth_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return jsonify({"error": "Missing token"}), 401
+        token = auth_header.split(" ", 1)[1]
+
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        except jwt.ExpiredSignatureError:
+            return jsonify({"error": "Token expired"}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Bad token"}), 401
+
+        g.user_id   = ObjectId(payload["user_id"])
+        g.username  = payload["username"]
+        return f(*args, **kwargs)
+    return wrapper
 
 # --- Users CRUD operations ---
 
@@ -70,6 +93,7 @@ def login():
         return jsonify({"error": "Invalid credentials"}), 401
 
     payload = {
+        "user_id": str(user["_id"]), # add this to authenticate useres
         "username": username,
         "exp": datetime.utcnow() + timedelta(hours=1)
     }
@@ -153,15 +177,17 @@ def add_product():
 
 # GET all items in cart
 @app.route("/cart", methods=["GET"])
+@auth_required
 def get_cart_items():
     items = []
-    for doc in shoppingCart.find():
+    for doc in shoppingCart.find({"user_id": g.user_id}):
         doc["_id"] = str(doc["_id"])
         items.append(doc)
     return jsonify(items), 200
 
 # POST a new item to cart
 @app.route("/cart", methods=["POST"])
+@auth_required
 def add_item_to_cart():
     data = request.get_json() or {}
 
@@ -170,6 +196,7 @@ def add_item_to_cart():
         if field not in data:
             return jsonify({"error": f"Missing field: {field}"}), 400
 
+    data["user_id"] = g.user_id
     # Validating  types if needed
     result = shoppingCart.insert_one(data)
     data["_id"] = str(result.inserted_id)
@@ -211,15 +238,17 @@ def delete_cart_item(item_id):
 
 # GET all wishlist items
 @app.route("/wishlist", methods=["GET"])
+@auth_required
 def get_wishlist_items():
     items = []
-    for doc in wishlist.find():
+    for doc in wishlist.find({"user_id": g.user_id}):
         doc["_id"] = str(doc["_id"])
         items.append(doc)
     return jsonify(items), 200
 
 # POST a new item to wishlist
 @app.route("/wishlist", methods=["POST"])
+@auth_required
 def add_item_to_wishlist():
     data = request.get_json() or {}
     required_fields = ["title", "price", "quantity", "from"]
@@ -227,6 +256,7 @@ def add_item_to_wishlist():
         if field not in data:
             return jsonify({"error": f"Missing field: {field}"}), 400
 
+    data["user_id"] = g.user_id
     result = wishlist.insert_one(data)
     data["_id"] = str(result.inserted_id)
     return jsonify(data), 201
@@ -306,48 +336,36 @@ def search_products():
 
 #POST request to move all items in shopping cart to orderhistory
 @app.route("/checkout", methods=["POST"])
+@auth_required
 def checkout():
-    """
-    1.  Read every document in shoppingCart
-    2.  Insert them into orderHistory with a shared order_id + timestamp
-    3.  Clear shoppingCart
-    4.  Return basic confirmation JSON
-    """
-
-    # 1) grab everything in the shopping cat
-    cart_items = list(shoppingCart.find())
-
+    cart_items = list(shoppingCart.find({"user_id": g.user_id}))
     if not cart_items:
         return jsonify({"msg": "Cart is empty"}), 400
 
-    # 2) build orderHistory docs
-    order_id = ObjectId()           # one id groups this order
+    order_id = ObjectId()
     now = datetime.utcnow()
 
-    history_docs = []
-    for item in cart_items:
-        item.pop("_id", None)       # drop old _id so Mongo creates new ones
-        history_docs.append({
-            **item,
+    history_docs = [
+        {
+            **{k: v for k, v in item.items() if k != "_id"},
+            "user_id": g.user_id,
             "order_id": order_id,
             "ordered_at": now
-        })
+        }
+        for item in cart_items
+    ]
 
-    # 3) bulk insert into OH and cart-clear
-    mongo.db.orderHistory.insert_many(history_docs)
-    shoppingCart.delete_many({})    # remove everything from cart
+    orderHistory.insert_many(history_docs)
+    shoppingCart.delete_many({"user_id": g.user_id})
 
-    # 4) response messages to client
-    return jsonify({
-        "order_id": str(order_id),
-        "items_moved": len(history_docs)
-    }), 201
+    return jsonify({"order_id": str(order_id), "items_moved": len(history_docs)}), 201
 
 # GET all items in orderhistory
 @app.route("/orders", methods=["GET"])
-def get_prderHistory():
+@auth_required
+def get_orderHistory():
     items = []
-    for doc in orderHistory.find():
+    for doc in orderHistory.find({"user_id": g.user_id}):
         doc["_id"] = str(doc["_id"])
         items.append(doc)
     return jsonify(items), 200
