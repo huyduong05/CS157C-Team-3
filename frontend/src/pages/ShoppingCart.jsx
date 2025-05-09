@@ -101,28 +101,42 @@ function ShoppingCart() {
           ))}
         </div>
 
-        <div className="bg-white border border-black p-6 rounded h-fit">
+        <div className="bg-neutral-50 border border-gray-200 shadow-2xl p-6 rounded h-fit w-full">
+      
           <h2 className="text-xl font-semibold mb-4">Summary</h2>
+
+          {/* Item Breakdown */}
+          <div className="space-y-3 mb-4">
+            {cartItems.map((item) => (
+              <div key={item._id} className="flex justify-between items-start text-sm">
+                <p className="w-3/4">{item.title.length > 60 ? item.title.slice(0, 60) + "..." : item.title}</p>
+                <p className="text-right font-medium">
+                  ${ (item.quantity * parseFloat(item.price)).toFixed(2) }
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Totals */}
           <p className="mb-2">
             Total Items: {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
           </p>
-          <p className="mb-4">
+          <p className="mb-4 font-semibold">
             Total Price: $
             {cartItems
-              .reduce(
-                (sum, item) => sum + item.quantity * parseFloat(item.price),
-                0
-              )
+              .reduce((sum, item) => sum + item.quantity * parseFloat(item.price), 0)
               .toFixed(2)}
           </p>
+
           <Link
             onClick={handleCheckout}
             to="/checkout"
-            className="bg-red-600 text-white px-4 py-2 rounded block text-center"
+            className="bg-red-600 text-white px-4 py-2 rounded block text-center hover:bg-red-700 transition"
           >
             Proceed to Checkout
           </Link>
         </div>
+
       </div>
     </div>
   );

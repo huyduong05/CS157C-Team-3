@@ -66,9 +66,9 @@ function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6eae2] flex flex-col items-center pt-20">
+    <div className="min-h-screen flex flex-col items-center pt-20">
       <h1 className="text-4xl font-bold mb-4">Your Profile</h1>
-      <div className="bg-white p-6 rounded-lg shadow max-w-md w-full">
+      <div className="bg-neutral-50 p-6 rounded-lg border border-gray-200 shadow-2xl max-w-md w-full">
         {editMode ? (
           <>
             <input
