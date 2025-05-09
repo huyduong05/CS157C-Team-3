@@ -18,7 +18,7 @@ const ProductCard = ({ product, actions = {}, onDelete }) => {
   const fallbackIcon = categoryIcons[product.category] || LaptopIcon; // to handle listings without an image
   
   const addToCart = () => {
-    fetch('http://localhost:5000/cart', {
+    fetch('http://localhost:5001/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -41,10 +41,34 @@ const ProductCard = ({ product, actions = {}, onDelete }) => {
         });
   }
 
+  const addToWishlist = () => {
+    fetch('http://localhost:5001/wishlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json'},
+      body: JSON.stringify({
+          title: product.title,
+          price: `${parseFloat(product.price?.toString().replace(/[^0-9.]/g, ''))}`,
+          quantity: 1, // for now just add 1 at a time
+          from: product.from,
+          category: product.category,
+          image_url: product.image_url
+
+      })
+  })
+      .then(res => res.json())
+      .then(data => {
+          alert('Item wishlisted!');
+      })
+      .catch(err => {
+          console.error('Error adding to wishlist:', err);
+          alert('Failed to wishlist item');
+      });
+  }
+
   return (
     <div
       key={product._id}
-      className="border rounded-lg shadow-md p-4 flex flex-col items-center"
+      className=" bg-white rounded-md shadow-lg border border-gray-200 p-4 flex flex-col items-center transition-transform duration-200 transform hover:scale-105"
     >
       {product.from === 'amazon' && product.image_url ? (
         <img
@@ -79,17 +103,24 @@ const ProductCard = ({ product, actions = {}, onDelete }) => {
       >
         View Product
       </a>
+      {actions.addToWishlist && (
+      <button
+        onClick={addToWishlist}
+        className='mt-2 px-4 py-2 bg-green-700 hover:bg-green-600 text-white rounded-3xl'>
+        Wishlist
+      </button>
+      )}
       {actions.addToCart && (
       <button
         onClick={addToCart}
-        className='mt-2 px-4 py-2 bg-cyan-700 text-white rounded'>
+        className='mt-2 px-4 py-2 bg-cyan-700 hover:bg-cyan-600 text-white rounded-3xl'>
         Add To Cart
       </button>
       )}
       {actions.delete && (
           <button
             onClick={() => onDelete(product._id) }
-            className="px-4 py-2 my-2 bg-red-600 text-white rounded"
+            className="px-4 py-2 my-2 bg-red-600 text-white rounded-3xl"
           >
             Delete
           </button>

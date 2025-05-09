@@ -3,6 +3,14 @@ from flask import Flask, jsonify, request
 from flask_pymongo import PyMongo
 from flask_cors import CORS
 from bson import ObjectId
+import re
+import bcrypt
+from datetime import datetime
+
+import jwt
+from datetime import datetime, timedelta
+
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
 
 app = Flask(__name__)
 CORS(app)  # allow cross‑origin requests
@@ -17,7 +25,108 @@ mongo = PyMongo(app)
 products = mongo.db.products  # product listings
 shoppingCart = mongo.db.shoppingCart  # shopping cart items
 wishlist = mongo.db.wishlist  # wishlist items
+users = mongo.db.users  # user accounts
+orderHistory = mongo.db.orderHistory # order history
 
+# --- Users CRUD operations ---
+
+@app.route("/signup", methods=["POST"])
+def signup():
+    data = request.get_json() or {}
+    username = data.get("username")
+    email = data.get("email")
+    password = data.get("password")
+
+    if not all([username, email, password]):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    if users.find_one({"username": username}):
+        return jsonify({"error": "Username already exists"}), 409
+
+    hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+    user = {
+        "username": username,
+        "email": email,
+        "password": hashed_pw,
+        "created_at": datetime.utcnow()
+    }
+
+    result = users.insert_one(user)
+    return jsonify({"message": "User created", "user_id": str(result.inserted_id)}), 201
+
+
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json() or {}
+    username = data.get("username")
+    password = data.get("password")
+
+    if not all([username, password]):
+        return jsonify({"error": "Missing credentials"}), 400
+
+    user = users.find_one({"username": username})
+    if not user or not bcrypt.checkpw(password.encode('utf-8'), user["password"]):
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    payload = {
+        "username": username,
+        "exp": datetime.utcnow() + timedelta(hours=1)
+    }
+    token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+
+    return jsonify({
+    "message": "Login successful",
+    "token": token,
+    "username": username 
+    }), 200
+
+
+@app.route("/user/<string:username>", methods=["GET"])
+def get_user(username):
+    user = users.find_one({"username": username})
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    created_raw = user.get("created_at")
+    created_at = created_raw.strftime("%b %d, %Y") if created_raw else "Unknown"
+
+    return jsonify({
+        "username": user["username"],
+        "email": user["email"],
+        "created_at": created_at
+    }), 200
+
+@app.route("/user/<string:username>", methods=["PUT"])
+def update_user(username):
+    data = request.get_json() or {}
+    new_username = data.get("username")
+    new_email = data.get("email")
+
+    if not new_username or not new_email:
+        return jsonify({"error": "Missing username or email"}), 400
+
+    if new_username != username and users.find_one({"username": new_username}):
+        return jsonify({"error": "Username already exists"}), 409
+
+    result = users.update_one(
+        {"username": username},
+        {"$set": {"username": new_username, "email": new_email}}
+    )
+
+    if result.matched_count == 0:
+        return jsonify({"error": "User not found"}), 404
+
+    updated_user = users.find_one({"username": new_username})
+    created_raw = updated_user.get("created_at")
+    created_at = created_raw.strftime("%b %d, %Y") if created_raw else "Unknown"
+
+    return jsonify({
+        "message": "User updated",
+        "username": updated_user["username"],
+        "email": updated_user["email"],
+        "created_at": created_at
+    }), 200
 
 # --- Product Listing CRUD operations ---
 @app.route("/products", methods=["GET"])
@@ -113,7 +222,7 @@ def get_wishlist_items():
 @app.route("/wishlist", methods=["POST"])
 def add_item_to_wishlist():
     data = request.get_json() or {}
-    required_fields = ["name", "price", "site"]
+    required_fields = ["title", "price", "quantity", "from"]
     for field in required_fields:
         if field not in data:
             return jsonify({"error": f"Missing field: {field}"}), 400
@@ -144,7 +253,7 @@ def safe_number(value):
 def get_random_products():
     products_collection = mongo.db.products
 
-    pipeline = [{"$sample": {"size": 10}}]
+    pipeline = [{"$sample": {"size": 12}}]
     random_products = list(products_collection.aggregate(pipeline))
 
     response = []
@@ -162,6 +271,86 @@ def get_random_products():
 
     return jsonify(response)
 
+# GET products based on search parameters
+@app.route("/search", methods=["GET"])
+def search_products():
+    raw_query = request.args.get("query", "").strip()
+    if not raw_query:
+        return jsonify({"products": []}), 200
+
+    # Escape special regex characters to prevent malformed queries
+    query = re.escape(raw_query)
+
+    # Querying MongoDB Products Collection
+    matching_products = products.find({
+        "$or": [
+            {"title": {"$regex": query, "$options": "i"}},
+            {"search_term": {"$regex": query, "$options": "i"}}
+        ]
+    })
+
+    response = []
+    for product in matching_products:
+        response.append({
+            "_id": str(product.get("_id")),
+            "category": product.get("search_term"),
+            "title": product.get("title"),
+            "url": product.get("url"),
+            "price": safe_number(product.get("price")),
+            "rating": safe_number(product.get("rating")),
+            "image_url": product.get("image_url"),
+            "from": product.get("from")
+        })
+
+    return jsonify({"products": response}), 200
+
+#POST request to move all items in shopping cart to orderhistory
+@app.route("/checkout", methods=["POST"])
+def checkout():
+    """
+    1.  Read every document in shoppingCart
+    2.  Insert them into orderHistory with a shared order_id + timestamp
+    3.  Clear shoppingCart
+    4.  Return basic confirmation JSON
+    """
+
+    # 1) grab everything in the shopping cat
+    cart_items = list(shoppingCart.find())
+
+    if not cart_items:
+        return jsonify({"msg": "Cart is empty"}), 400
+
+    # 2) build orderHistory docs
+    order_id = ObjectId()           # one id groups this order
+    now = datetime.utcnow()
+
+    history_docs = []
+    for item in cart_items:
+        item.pop("_id", None)       # drop old _id so Mongo creates new ones
+        history_docs.append({
+            **item,
+            "order_id": order_id,
+            "ordered_at": now
+        })
+
+    # 3) bulk insert into OH and cart-clear
+    mongo.db.orderHistory.insert_many(history_docs)
+    shoppingCart.delete_many({})    # remove everything from cart
+
+    # 4) response messages to client
+    return jsonify({
+        "order_id": str(order_id),
+        "items_moved": len(history_docs)
+    }), 201
+
+# GET all items in orderhistory
+@app.route("/orders", methods=["GET"])
+def get_prderHistory():
+    items = []
+    for doc in orderHistory.find():
+        doc["_id"] = str(doc["_id"])
+        items.append(doc)
+    return jsonify(items), 200
 
 if __name__ == "__main__":
     # Running this way only applies if you do: python app.py

@@ -7,14 +7,38 @@ function ShoppingCart() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:5000/cart") //changed to localhost 5000
+    fetch("http://localhost:5001/cart") //changed to localhost 5000
       .then((res) => res.json())
       .then(setCartItems)
       .catch((err) => console.error("Failed to fetch cart items:", err));
   }, []);
 
+  const handleCheckout = async () => {
+    try {
+      const res = await fetch("http://localhost:5001/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // credentials: "include",  // for adding auth down the road
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.msg || "Checkout failed");
+      }
+
+      const data = await res.json();     // { order_id, items_moved }
+      alert(`Order placed! ID: ${data.order_id}`);
+
+      // Clear the cart UI if request success
+      setCartItems([]);
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
+  };
+
   const handleDelete = async (id) => {
-    const res = await fetch(`http://localhost:5000/cart/${id}`, { 
+    const res = await fetch(`http://localhost:5001/cart/${id}`, { 
       method: "DELETE",
     });
   
@@ -57,7 +81,7 @@ function ShoppingCart() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6eae2] px-8 py-12">
+    <div className="min-h-screen px-8 py-12">
       <div className="flex justify-between mb-6">
         <button
           onClick={() => navigate("/")} //switched to navigate back to home
@@ -91,6 +115,7 @@ function ShoppingCart() {
               .toFixed(2)}
           </p>
           <Link
+            onClick={handleCheckout}
             to="/checkout"
             className="bg-red-600 text-white px-4 py-2 rounded block text-center"
           >

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ProductCard from "../components/ProductCard";
 
 function Wishlist() {
   const [wishlist, setWishlist] = useState([]);
@@ -20,6 +21,7 @@ function Wishlist() {
       });
       if (res.ok) {
         setWishlist((prev) => prev.filter((item) => item._id !== id));
+        alert("Item removed from Wishlist!");
       }
     } catch (err) {
       console.error("Failed to delete item:", err);
@@ -45,13 +47,20 @@ function Wishlist() {
       console.error("Failed to move item to cart:", err);
     }
   };
-
+  /*
   useEffect(() => {
     fetchWishlist();
   }, []);
+  */
+  useEffect(() => {
+    fetch("http://localhost:5001/wishlist") //changed to localhost 5000
+      .then((res) => res.json())
+      .then(setWishlist)
+      .catch((err) => console.error("Failed to fetch wishlist items: ", err));
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#f6eae2] py-16 px-6">
+    <div className="min-h-screen py-16 px-6">
       <h1 className="text-4xl font-bold mb-8 text-center text-red-700">
         Your Wishlist
       </h1>
@@ -61,37 +70,7 @@ function Wishlist() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {wishlist.map((item) => (
-            <div
-              key={item._id}
-              className="bg-white border border-black rounded-lg shadow p-6"
-            >
-              <h2 className="text-xl font-semibold mb-2">{item.title || item.name}</h2>
-              <p className="text-gray-700 mb-1">
-                <strong>Price:</strong> {item.price}
-              </p>
-              <a
-                href={item.site}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 underline break-words"
-              >
-                View Product
-              </a>
-              <div className="mt-4 flex justify-between">
-                <button
-                  onClick={() => moveToCart(item)}
-                  className="text-blue-700 hover:underline"
-                >
-                  Move to Cart
-                </button>
-                <button
-                  onClick={() => removeItem(item._id)}
-                  className="text-red-600 hover:underline"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
+            <ProductCard product = {item} actions = { {delete: true, addToCart:true}} onDelete={removeItem}/>
           ))}
         </div>
       )}
