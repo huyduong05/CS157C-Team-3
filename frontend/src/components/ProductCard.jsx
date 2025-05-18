@@ -19,11 +19,13 @@ const ProductCard = ({ product, actions = {}, onDelete }) => {
   const fallbackIcon = categoryIcons[product.category] || LaptopIcon; // to handle listings without an image
   
   const addToCart = () => {
+    console.log('URL: ', product.url);
     authFetch('http://localhost:5001/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify({
             title: product.title,
+            url: product.url,
             price: `${parseFloat(product.price?.toString().replace(/[^0-9.]/g, ''))}`,
             quantity: 1, // for now just add 1 at a time
             from: product.from,
@@ -48,6 +50,7 @@ const ProductCard = ({ product, actions = {}, onDelete }) => {
       headers: { 'Content-Type': 'application/json'},
       body: JSON.stringify({
           title: product.title,
+          url: product.url,
           price: `${parseFloat(product.price?.toString().replace(/[^0-9.]/g, ''))}`,
           quantity: 1, // for now just add 1 at a time
           from: product.from,
