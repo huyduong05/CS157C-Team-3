@@ -191,7 +191,7 @@ def get_cart_items():
 def add_item_to_cart():
     data = request.get_json() or {}
 
-    required_fields = ["title", "price", "quantity", "from"]
+    required_fields = ["title", "price", "quantity", "from", "url"]
     for field in required_fields:
         if field not in data:
             return jsonify({"error": f"Missing field: {field}"}), 400
