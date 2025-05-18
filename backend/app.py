@@ -370,6 +370,54 @@ def get_orderHistory():
         items.append(doc)
     return jsonify(items), 200
 
+@app.route("/recs", methods=["GET"])
+@auth_required
+def get_recommendations():
+    past_orders = list(orderHistory.find({"user_id": g.user_id}))
+    print("Orders:", past_orders)
+
+    if not past_orders:
+        return jsonify({"recs": []}), 200
+
+    purchased_ids = set(str(order.get("product_id", order.get("_id"))) for order in past_orders)
+    categories = [order.get("category") for order in past_orders if order.get("category")]
+    print("Categories:", categories)
+
+    if not categories:
+        return jsonify({"recs": []}), 200
+
+    from collections import Counter
+    category_counter = Counter(categories)
+    top_categories = [cat for cat, _ in category_counter.most_common(2)]
+    print("Top categories:", top_categories)
+
+    # Query for products specfically in those top categories
+    recommended_products = list(products.aggregate([
+        {
+            "$match": {
+                "search_term": {"$in": top_categories}, #changed to search_term instead of category
+                "_id": {"$nin": [ObjectId(pid) for pid in purchased_ids if ObjectId.is_valid(pid)]}
+            }
+        },
+        { "$sample": { "size": 4 } }
+    ]))
+    print("Recommended:", recommended_products)
+
+    response = [
+        {
+            "_id": str(product.get("_id")),
+            "title": product.get("title"),
+            "category": product.get("search_term"), #changed to search_term
+            "price": safe_number(product.get("price")),
+            "image_url": product.get("image_url"),
+            "from": product.get("from"),
+        }
+        for product in recommended_products
+    ]
+
+    return jsonify({"recs": response}), 200
+
+
+
 if __name__ == "__main__":
-    # Running this way only applies if you do: python app.py
     app.run(host="0.0.0.0", port=5001)

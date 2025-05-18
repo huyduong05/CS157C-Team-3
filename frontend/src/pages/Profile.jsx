@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import authFetch from "../authFetch";
+import ProductCard from '../components/ProductCard';
 
 function Profile() {
   const navigate = useNavigate();
@@ -8,6 +10,9 @@ function Profile() {
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({ username: '', email: '' });
   const [error, setError] = useState('');
+
+  //hook to hold recs 
+  const [recs, setRecs] = useState([]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -29,6 +34,16 @@ function Profile() {
       fetchUser();
     }
   }, [storedUsername]);
+
+  useEffect(() => {
+    authFetch("http://localhost:5001/recs")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Fetched recs:", data);
+        setRecs(data.recs || []);
+      })
+      .catch((err) => console.error("Failed to authFetch past recommendations:", err));
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('username'); 
@@ -126,6 +141,12 @@ function Profile() {
             Log Out
           </button>
         </div>
+      </div>
+      <h1 className="my-8 text-4xl font-bold mb-4">Recommended Products For You</h1>
+      <div className="pb-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4">
+          {recs.map((item) => (
+            <ProductCard product = {item} actions = {{addToCart: true, addToWishlist: true}}/>
+          ))}
       </div>
     </div>
   );
