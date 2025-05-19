@@ -38,7 +38,15 @@ const SearchResults = () => {
           fetchedResults.sort((a, b) => getNumericPrice(a.price) - getNumericPrice(b.price));
         } else if (sortOrder === "highToLow") {
           fetchedResults.sort((a, b) => getNumericPrice(b.price) - getNumericPrice(a.price));
-        }        
+        } else if (sortOrder === "aToZ") {
+          fetchedResults.sort((a, b) =>
+            a.title?.localeCompare(b.title || "", undefined, { sensitivity: 'base' })
+          );
+        } else if (sortOrder === "zToA") {
+          fetchedResults.sort((a, b) =>
+            b.title?.localeCompare(a.title || "", undefined, { sensitivity: 'base' })
+          );
+        } 
 
         setResults(fetchedResults);
         setLoading(false);
@@ -67,6 +75,8 @@ const SearchResults = () => {
               <option value="relevance">Featured</option>
               <option value="lowToHigh">Price: Low to High</option>
               <option value="highToLow">Price: High to Low</option>
+              <option value="aToZ">Title: A to Z</option>
+              <option value="zToA">Title: Z to A</option>
               
             </select>
           </div>
