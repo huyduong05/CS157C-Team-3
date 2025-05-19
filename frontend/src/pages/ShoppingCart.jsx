@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import ProductCard from "../components/ProductCard";
 import authFetch from "../authFetch";
+import ProductCard from "../components/ProductCard";
 
 function ShoppingCart() {
   const [cartItems, setCartItems] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    authFetch("http://localhost:5001/cart") //changed to localhost 5000
+    authFetch("http://localhost:5001/cart")
       .then((res) => res.json())
       .then(setCartItems)
       .catch((err) => console.error("Failed to fetch cart items:", err));
@@ -19,7 +19,6 @@ function ShoppingCart() {
       const res = await authFetch("http://localhost:5001/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // credentials: "include",  // for adding auth down the road
       });
 
       if (!res.ok) {
@@ -27,10 +26,8 @@ function ShoppingCart() {
         throw new Error(err.msg || "Checkout failed");
       }
 
-      const data = await res.json();     // { order_id, items_moved }
+      const data = await res.json();
       alert(`Order placed! ID: ${data.order_id}`);
-
-      // Clear the cart UI if request success
       setCartItems([]);
     } catch (err) {
       console.error(err);
@@ -39,11 +36,10 @@ function ShoppingCart() {
   };
 
   const handleDelete = async (id) => {
-    const res = await authFetch(`http://localhost:5001/cart/${id}`, { 
+    const res = await authFetch(`http://localhost:5001/cart/${id}`, {
       method: "DELETE",
     });
-  
-    //added alerts to communicate to user if delete successful or not
+
     if (res.ok) {
       setCartItems((prev) => prev.filter((item) => item._id !== id));
       alert("Product Deleted!");
@@ -53,20 +49,21 @@ function ShoppingCart() {
   };
 
   const handleUpdateQty = async (id, newQty) => {
+    if (newQty < 1) return;
     await fetch(`http://localhost:5001/cart/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ quantity: newQty }),
     });
+
     setCartItems((prev) =>
       prev.map((item) =>
-        item._id === id ? { ...item,  quantity: newQty } : item
+        item._id === id ? { ...item, quantity: newQty } : item
       )
     );
   };
 
   const handleMoveToWishlist = async (item) => {
-    // Send POST to wishlist
     await fetch("http://localhost:5001/wishlist", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -76,8 +73,7 @@ function ShoppingCart() {
         site: item.site,
       }),
     });
-  
-    // Then remove from cart
+
     await handleDelete(item._id);
   };
 
@@ -85,7 +81,7 @@ function ShoppingCart() {
     <div className="min-h-screen px-8 py-12">
       <div className="flex justify-between mb-6">
         <button
-          onClick={() => navigate("/")} //switched to navigate back to home
+          onClick={() => navigate("/")}
           className="text-sm underline text-gray-700 flex items-center"
         >
           ← Continue Shopping
@@ -95,29 +91,51 @@ function ShoppingCart() {
       <h1 className="text-3xl font-bold mb-6">Your Shopping Cart</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-6">
           {cartItems.map((item) => (
-            <ProductCard product = {item} actions ={ { delete:true} } onDelete={handleDelete}/>
+            <div key={item._id} className="space-y-2">
+              <ProductCard product={item} actions={{ delete: true }} onDelete={handleDelete} />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    handleUpdateQty(item._id, item.quantity - 1)
+                  }
+                  className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                >
+                  −
+                </button>
+                <span>{item.quantity}</span>
+                <button
+                  onClick={() =>
+                    handleUpdateQty(item._id, item.quantity + 1)
+                  }
+                  className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                >
+                  +
+                </button>
+              </div>
+            </div>
           ))}
         </div>
 
         <div className="bg-neutral-50 border border-gray-200 shadow-2xl p-6 rounded h-fit w-full">
-      
           <h2 className="text-xl font-semibold mb-4">Summary</h2>
 
-          {/* Item Breakdown */}
           <div className="space-y-3 mb-4">
             {cartItems.map((item) => (
               <div key={item._id} className="flex justify-between items-start text-sm">
-                <p className="w-3/4">{item.title.length > 60 ? item.title.slice(0, 60) + "..." : item.title}</p>
+                <p className="w-3/4">
+                  {item.title.length > 60
+                    ? item.title.slice(0, 60) + "..."
+                    : item.title}
+                </p>
                 <p className="text-right font-medium">
-                  ${ (item.quantity * parseFloat(item.price)).toFixed(2) }
+                  ${(item.quantity * parseFloat(item.price)).toFixed(2)}
                 </p>
               </div>
             ))}
           </div>
 
-          {/* Totals */}
           <p className="mb-2">
             Total Items: {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
           </p>
@@ -136,7 +154,6 @@ function ShoppingCart() {
             Proceed to Checkout
           </Link>
         </div>
-
       </div>
     </div>
   );

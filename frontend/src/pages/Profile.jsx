@@ -8,10 +8,8 @@ function Profile() {
   const storedUsername = localStorage.getItem('username');
   const [user, setUser] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const [formData, setFormData] = useState({ username: '', email: '' });
+  const [formData, setFormData] = useState({ username: '', email: '', password: '' });
   const [error, setError] = useState('');
-
-  //hook to hold recs 
   const [recs, setRecs] = useState([]);
 
   useEffect(() => {
@@ -21,7 +19,7 @@ function Profile() {
         const data = await res.json();
         if (res.ok) {
           setUser(data);
-          setFormData({ username: data.username, email: data.email });
+          setFormData({ username: data.username, email: data.email, password: '' });
         } else {
           console.error(data.error);
         }
@@ -58,17 +56,26 @@ function Profile() {
   const handleSave = async () => {
     setError('');
     try {
+      const updatePayload = {
+        username: formData.username,
+        email: formData.email
+      };
+      if (formData.password) {
+        updatePayload.password = formData.password;
+      }
+
       const res = await fetch(`http://localhost:5001/user/${storedUsername}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(updatePayload)
       });
 
       const data = await res.json();
       if (res.ok) {
         setUser(data);
-        localStorage.setItem('username', data.username); // update localStorage
+        localStorage.setItem('username', data.username);
         setEditMode(false);
+        setFormData(prev => ({ ...prev, password: '' }));
       } else {
         setError(data.error || 'Update failed');
       }
@@ -99,11 +106,20 @@ function Profile() {
               onChange={handleChange}
               className="w-full border border-gray-300 p-2 rounded mb-2"
             />
+            <input
+              type="password"
+              name="password"
+              placeholder="New password (optional)"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full border border-gray-300 p-2 rounded mb-2"
+            />
           </>
         ) : (
           <>
             <p className="text-gray-700">Name: {user.username}</p>
             <p className="text-gray-700 mt-2">Email: {user.email}</p>
+            <p className="text-gray-700 mt-2">Password: ••••••••</p>
           </>
         )}
         <p className="text-gray-700 mt-2">Member since: {user.created_at}</p>
@@ -120,7 +136,10 @@ function Profile() {
                 Save
               </button>
               <button
-                onClick={() => setEditMode(false)}
+                onClick={() => {
+                  setEditMode(false);
+                  setFormData(prev => ({ ...prev, password: '' }));
+                }}
                 className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
               >
                 Cancel
@@ -144,9 +163,13 @@ function Profile() {
       </div>
       <h1 className="my-8 text-4xl font-bold mb-4">Recommended Products For You</h1>
       <div className="pb-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4">
-          {recs.map((item) => (
-            <ProductCard product = {item} actions = {{addToCart: true, addToWishlist: true}}/>
-          ))}
+        {recs.map((item) => (
+          <ProductCard
+            key={item._id}
+            product={item}
+            actions={{ addToCart: true, addToWishlist: true }}
+          />
+        ))}
       </div>
     </div>
   );
